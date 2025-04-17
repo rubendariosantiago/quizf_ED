@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Evaluación de Ecuaciones Diferenciales</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        .question {
+            margin-bottom: 20px;
+        }
+        .result {
+            margin-top: 10px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            background-color: #f9f9f9;
+            width: 100%;
+        }
+        .feedback {
+            color: red;
+        }
+        .correct {
+            color: green;
+        }
+        button {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Examen de Ecuaciones Diferenciales</h2>
+
+        <!-- Ejercicio de teoría -->
+        <div id="question-theory">
+            <!-- Aquí se agregarán las preguntas teóricas dinámicamente -->
+        </div>
+
+        <!-- Ejercicio de práctica -->
+        <div id="question-practice">
+            <!-- Aquí se agregarán las preguntas de práctica dinámicamente -->
+        </div>
+
+        <button onclick="checkAnswers()">Evaluar Respuestas</button>
+        <button onclick="clearAnswers()">Limpiar Respuestas</button>
+        <button onclick="resetExam()">Reiniciar Examen</button>
+
+        <!-- Aquí se agregará el feedback -->
+        <div id="feedback-container"></div>
+    </div>
+
+    <!-- Archivos JavaScript externos -->
+    <script src="practica.js"></script>
+    <script src="teorica.js"></script>
+
+    <script>
+        // Generar una pregunta aleatoria de teoría y de práctica al cargar la página
+        window.onload = function() {
+            generateTheoryQuestion();
+            generatePracticeQuestion();
+        };
+
+        // Generar una pregunta teórica aleatoria
+        function generateTheoryQuestion() {
+            const randomQuestion = theoryQuestions[Math.floor(Math.random() * theoryQuestions.length)];
+            let questionHTML = `
+                <div class="question">
+                    <p><strong>${randomQuestion.question}</strong></p>
+                    ${randomQuestion.options.map((option, index) => `
+                        <label>
+                            <input type="radio" name="theoryAnswer" value="${index}">
+                            ${option}
+                        </label><br>
+                    `).join('')}
+                    <div class="feedback" id="feedback-theory"></div>
+                </div>
+            `;
+            document.getElementById('question-theory').innerHTML = questionHTML;
+        }
+
+        // Generar una pregunta de práctica aleatoria
+        function generatePracticeQuestion() {
+            const randomTemplate = practicalTemplates[Math.floor(Math.random() * practicalTemplates.length)];
+            const questionText = randomTemplate.template.replace(/{{([^}]+)}}/g, (_, key) => randomTemplate.params[key].min + Math.floor(Math.random() * (randomTemplate.params[key].max - randomTemplate.params[key].min + 1)));
+            let practiceHTML = `
+                <div class="question">
+                    <p><strong>${questionText}</strong></p>
+                    <input type="text" id="user-practice-answer" placeholder="Introduce tu respuesta aquí">
+                    <div class="feedback" id="feedback-practice"></div>
+                </div>
+            `;
+            document.getElementById('question-practice').innerHTML = practiceHTML;
+        }
+
+        // Evaluar las respuestas
+        function checkAnswers() {
+            let feedback = "";
+
+            // Evaluación de la respuesta teórica
+            const theoryAnswer = document.querySelector('input[name="theoryAnswer"]:checked');
+            if (theoryAnswer) {
+                const theoryAnswerIndex = parseInt(theoryAnswer.value);
+                const theoryCorrectAnswerIndex = theoryQuestions[0].answer;
+                if (theoryAnswerIndex === theoryCorrectAnswerIndex) {
+                    feedback += "<p class='correct'>¡Respuesta correcta en la pregunta teórica!</p>";
+                } else {
+                    feedback += "<p class='feedback'>Respuesta incorrecta en la pregunta teórica. " + theoryQuestions[0].solution + "</p>";
+                }
+            } else {
+                feedback += "<p class='feedback'>Por favor, selecciona una opción para la pregunta teórica.</p>";
+            }
+
+            // Evaluación de la respuesta práctica
+            const practiceAnswer = document.getElementById('user-practice-answer').value;
+            const solution = practicalTemplates[0].solution_latex.replace(/{{([^}]+)}}/g, (_, key) => practicalTemplates[0].params[key].min + Math.floor(Math.random() * (practicalTemplates[0].params[key].max - practicalTemplates[0].params[key].min + 1)));
+            const ECM = Math.abs(parseFloat(practiceAnswer) - parseFloat(solution));
+
+            if (ECM < 0.01) {  // Tolerancia de 0.01
+                feedback += "<p class='correct'>¡Respuesta correcta en la pregunta de práctica!</p>";
+            } else {
+                feedback += "<p class='feedback'>Respuesta incorrecta en la pregunta de práctica. La solución es: " + solution + "</p>";
+            }
+
+            // Mostrar el feedback
+            document.getElementById('feedback-container').innerHTML = feedback;
+        }
+
+        // Limpiar respuestas
+        function clearAnswers() {
+            document.querySelectorAll('input[type="radio"]').forEach(radio => radio.checked = false);
+            document.getElementById('user-practice-answer').value = "";
+            document.getElementById('feedback-theory').innerHTML = "";
+            document.getElementById('feedback-practice').innerHTML = "";
+            document.getElementById('feedback-container').innerHTML = "";
+        }
+
+        // Reiniciar el examen
+        function resetExam() {
+            clearAnswers();
+            generateTheoryQuestion();
+            generatePracticeQuestion();
+        }
+    </script>
+</body>
+</html>
